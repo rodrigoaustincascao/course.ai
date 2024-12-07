@@ -1,0 +1,49 @@
+version: '3.8'
+# =======================
+# URLs 
+# Ollama = http://ollama:11434
+# Open Web UI = http://localhost:3000
+# Anything LLm = http://localhost:3001
+# =======================
+services:
+  couse_ai_anaconda:
+    # image: continuumio/anaconda3
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+       - ../:/opt/notebooks
+    ports:
+      - "8888:8888"
+    command:
+      /bin/bash -c "/opt/conda/bin/conda install jupyter -y --quiet && /opt/conda/bin/jupyter notebook --notebook-dir=/opt/notebooks --ip='0.0.0.0' --port=8888 --no-browser --allow-root"
+    tty: true
+    networks:
+      - couse_ai-docker
+  
+  
+  couse_ai_ollama:
+    volumes:
+      - couse_ai_ollama:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:latest
+    ports:
+      - 11430:11434
+    networks:
+      - couse_ai-docker
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+  
+networks:
+  couse_ai-docker:
+    external: false
+volumes:
+  couse_ai_ollama: {}
